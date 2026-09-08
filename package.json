@@ -1,0 +1,32 @@
+{
+  "name": "household",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bigfluffycookie/household.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/bigfluffycookie/household/issues"
+  },
+  "homepage": "https://github.com/bigfluffycookie/household#readme",
+  "dependencies": {
+    "fastify": "^5.12.3",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.0",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: household
+      POSTGRES_PASSWORD: household
+      POSTGRES_DB: household
+    ports:
+      - "5432:5432"
+    volumes:
+      - household_pg:/var/lib/postgresql/data
+
+volumes:
+  household_pg:
