@@ -12,7 +12,7 @@ app.get("/health", async () => {
 
 app.get("/purchases", async () => {
     const { rows } = await pool.query(
-        "select id, bought_on, source, store, raw_name, qty, unit_price from purchases order by id",
+        "select id, bought_on, store, raw_name, qty, unit_price, weight, product_id from purchases order by id",
     );
     return rows;
 });

@@ -1,10 +1,10 @@
-/** 
- * parses invoices from migros online delivery service. 
+/**
+ * parses invoices from migros online delivery service.
  * Subject to change if migros changes the layout.
-*/
-import type { ParsedLine, ReceiptParser } from "./types";
+ */
+import type { ParsedLine } from "../../purchases/types";
 
-const source = "migros";
+const store = "migros";
 
 const purchaseRow =
     /^(?<productId>\d{3,})\s+(?<name>.+?)\s+\d+\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\*\d+\.\d{2})?(?<perKg>\s+\/(?:\s+kg)?)?\s+(?<lineTotal>\d+\.\d{2})\s+\d+\.\d%$/;
@@ -62,7 +62,7 @@ function parse(receipt: string): ParsedLine[] {
             raw_name: row.name,
             qty: Number(row.qty),
             unit_price: unitPrice,
-            source,
+            store,
             bought_on,
             product_id: row.productId,
             weight:
@@ -74,8 +74,8 @@ function parse(receipt: string): ParsedLine[] {
     return purchases;
 }
 
-export const migrosOnline: ReceiptParser = {
-    source,
+export const migrosOnline = {
+    store,
     match,
     parse,
 };
