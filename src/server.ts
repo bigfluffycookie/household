@@ -12,10 +12,9 @@ app.get("/health", async () => {
 
 app.get("/purchases", async () => {
     const { rows } = await pool.query(
-        "select id, bought_on, source, store, raw_name, qty, unit_price from purchases order by id",
+        "select id, bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id from purchases order by id",
     );
     return rows;
 });
-
 
 await app.listen({ port: 3000, host: "127.0.0.1" });

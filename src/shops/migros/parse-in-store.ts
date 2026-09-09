@@ -1,24 +1,27 @@
-/** 
- * parses receipts from migros in store purchases. 
+/**
+ * parses receipts from migros in store purchases.
  * Subject to change if migros changes the layout.
-*/
-import type { ParsedLine, ReceiptParser } from "./types";
+ */
+import type { ParsedLine } from "../../purchases/types";
 
-const source = "migros";
+const store = "migros";
 
 const purchaseRow =
-    /^(?<name>.*)\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\d+\.\d{2})?\s+\d+\.\d{2}\s+\d+$/;
+    /^(?<name>.*)\s+(?<qty>\d+(?:\.\d+)?)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\d+\.\d{2})?\s+\d+\.\d{2}\s+\d+$/;
 
 function match(receipt: string): boolean {
     return receipt.includes("Artikelbezeichnung");
 }
 
 function parse(receipt: string): ParsedLine[] {
-    const bought_on = receipt.match(/(\d{2}\.\d{2}\.\d{4})/)?.[1] ?? "";
+    const bought_on = (receipt.match(/(\d{2}\.\d{2}\.\d{4})/)?.[1] ?? "")
+        .split(".")
+        .reverse()
+        .join("-");
 
     const lines = receipt.split(/\r?\n/).map((line) => line.trim());
     const header = lines.findIndex((line) =>
-        line.startsWith("Filiale"),
+        line.startsWith("Artikelbezeichnung"),
     );
     if (header === -1) return [];
 
@@ -33,18 +36,18 @@ function parse(receipt: string): ParsedLine[] {
         purchases.push({
             raw_name: row.name,
             qty: Number(row.qty),
+            unit: row.qty.includes(".") ? "kg" : "pcs",
             unit_price: Number(row.unitPrice),
-            source,
+            store,
             bought_on,
             product_id: null,
-            weight: null,
         });
     }
     return purchases;
 }
 
-export const migrosStore: ReceiptParser = {
-    source,
+export const migrosStore = {
+    store,
     match,
     parse,
 };

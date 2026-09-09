@@ -1,10 +1,10 @@
-/** 
- * parses invoices from migros online delivery service. 
+/**
+ * parses invoices from migros online delivery service.
  * Subject to change if migros changes the layout.
-*/
-import type { ParsedLine, ReceiptParser } from "./types";
+ */
+import type { ParsedLine } from "../../purchases/types";
 
-const source = "migros";
+const store = "migros";
 
 const purchaseRow =
     /^(?<productId>\d{3,})\s+(?<name>.+?)\s+\d+\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\*\d+\.\d{2})?(?<perKg>\s+\/(?:\s+kg)?)?\s+(?<lineTotal>\d+\.\d{2})\s+\d+\.\d%$/;
@@ -16,7 +16,13 @@ function match(receipt: string): boolean {
 function deliveryDate(receipt: string): string {
     const header = receipt.split("Ihre Lieferung im Detail")[0] ?? receipt;
     const dates = [...header.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map((m) => m[1]);
-    return (dates[2] ?? dates[1] ?? dates[0] ?? "").split("/").reverse().join("-");
+    const labels = [
+        ...header.matchAll(/Rechnungsdatum|Bestelldatum|Lieferdatum/g),
+    ].map((m) => m[0]);
+    // pdf-parse prints the three dates, then the labels. Lieferdatum is last.
+    const i = labels.indexOf("Lieferdatum");
+    const raw = (i === -1 ? dates.at(-1) : dates[i]) ?? "";
+    return raw.split("/").reverse().join("-");
 }
 
 /** pdf-parse puts /kg and discount leftovers on the next lines. */
@@ -58,24 +64,24 @@ function parse(receipt: string): ParsedLine[] {
         if (!row?.productId || !row.name || !row.qty || !row.unitPrice) continue;
 
         const unitPrice = Number(row.unitPrice);
+        const perKg = Boolean(row.perKg) && unitPrice !== 0 && row.lineTotal;
         purchases.push({
             raw_name: row.name,
-            qty: Number(row.qty),
+            qty: perKg
+                ? Math.round((Number(row.lineTotal) / unitPrice) * 100) / 100
+                : Number(row.qty),
+            unit: perKg ? "kg" : "pcs",
             unit_price: unitPrice,
-            source,
+            store,
             bought_on,
             product_id: row.productId,
-            weight:
-                row.perKg && unitPrice !== 0 && row.lineTotal
-                    ? Number(row.lineTotal) / unitPrice
-                    : null,
         });
     }
     return purchases;
 }
 
-export const migrosOnline: ReceiptParser = {
-    source,
+export const migrosOnline = {
+    store,
     match,
     parse,
 };

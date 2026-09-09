@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "household": "bin/household.mjs"
+  },
   "scripts": {
+    "start": "docker compose up -d --wait && tsx --env-file=.env src/server.ts",
     "backup": "powershell -File scripts/backup.ps1",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test test/**/*.test.ts"
   },
   "repository": {
     "type": "git",
