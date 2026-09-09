@@ -16,7 +16,4 @@ export const migros: Shop = {
         }
         return parser.parse(text);
     },
-    async enrich(lines) {
-        return lines;
-    },
 };

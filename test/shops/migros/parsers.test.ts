@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { pdfToText } from "../../../src/utils.ts/pdf-to-text.js";
+import { pdfToText } from "../../../src/utils/pdf-to-text.js";
 import { detectShop } from "../../../src/shops/index.js";
 import type { ParsedLine } from "../../../src/purchases/types.js";
 
@@ -77,7 +77,7 @@ describe("pdf fixtures", () => {
 });
 
 function textOf(name: string) {
-    const file = fileURLToPath(new URL(`./test-pdfs/${name}`, import.meta.url));
+    const file = fileURLToPath(new URL(`./pdfs/${name}`, import.meta.url));
     return pdfToText(fs.readFileSync(file));
 }
 

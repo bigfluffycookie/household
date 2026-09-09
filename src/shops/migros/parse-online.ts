@@ -16,7 +16,13 @@ function match(receipt: string): boolean {
 function deliveryDate(receipt: string): string {
     const header = receipt.split("Ihre Lieferung im Detail")[0] ?? receipt;
     const dates = [...header.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map((m) => m[1]);
-    return (dates[2] ?? dates[1] ?? dates[0] ?? "").split("/").reverse().join("-");
+    const labels = [
+        ...header.matchAll(/Rechnungsdatum|Bestelldatum|Lieferdatum/g),
+    ].map((m) => m[0]);
+    // pdf-parse prints the three dates, then the labels. Lieferdatum is last.
+    const i = labels.indexOf("Lieferdatum");
+    const raw = (i === -1 ? dates.at(-1) : dates[i]) ?? "";
+    return raw.split("/").reverse().join("-");
 }
 
 /** pdf-parse puts /kg and discount leftovers on the next lines. */

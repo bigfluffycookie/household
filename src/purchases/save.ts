@@ -1,17 +1,18 @@
+import type { PoolClient } from "pg";
 import { pool } from "../db";
 import type { Shop } from "../shops/types";
-import type { ParsedLine } from "./types";
+import type { ParsedLine, PurchaseRow } from "./types";
 
 const purchaseColumns =
     "id, bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id";
 
 export type SaveResult = {
     duplicate: boolean;
-    purchases: Record<string, unknown>[];
+    purchases: PurchaseRow[];
 };
 
-async function purchasesForReceipt(receiptId: number) {
-    const { rows } = await pool.query(
+async function purchasesForReceipt(client: PoolClient, receiptId: number) {
+    const { rows } = await client.query<PurchaseRow>(
         `select ${purchaseColumns} from purchases where receipt_id = $1 order by id`,
         [receiptId],
     );
@@ -23,36 +24,37 @@ export async function save(
     lines: ParsedLine[],
     sha256: string,
 ): Promise<SaveResult> {
-    const linesToWrite = await shop.enrich(lines);
-    if (!linesToWrite.length) {
+    const first = lines[0];
+    if (!first) {
         return { duplicate: false, purchases: [] };
     }
 
     const client = await pool.connect();
     try {
         await client.query("begin");
-        const inserted = await client.query(
+        const inserted = await client.query<{ id: number }>(
             `insert into receipts (store, bought_on, sha256)
              values ($1, $2, $3)
              on conflict (sha256) do nothing
              returning id`,
-            [shop.store, linesToWrite[0]?.bought_on, sha256],
+            [shop.store, first.bought_on, sha256],
         );
-        const receiptId = inserted.rows[0]?.id as number | undefined;
+        const receiptId = inserted.rows[0]?.id;
         if (!receiptId) {
-            await client.query("rollback");
-            const existing = await pool.query(
+            const existing = await client.query<{ id: number }>(
                 "select id from receipts where sha256 = $1",
                 [sha256],
             );
-            const id = existing.rows[0]?.id as number | undefined;
+            const id = existing.rows[0]?.id;
             if (!id) throw new Error("duplicate receipt missing after conflict");
-            return { duplicate: true, purchases: await purchasesForReceipt(id) };
+            const purchases = await purchasesForReceipt(client, id);
+            await client.query("commit");
+            return { duplicate: true, purchases };
         }
 
-        const written = [];
-        for (const line of linesToWrite) {
-            const { rows } = await client.query(
+        const written: PurchaseRow[] = [];
+        for (const line of lines) {
+            const { rows } = await client.query<PurchaseRow>(
                 `insert into purchases (bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id)
                  values ($1, $2, $3, $4, $5, $6, $7, $8)
                  returning ${purchaseColumns}`,
