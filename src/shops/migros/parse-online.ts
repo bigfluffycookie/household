@@ -58,17 +58,17 @@ function parse(receipt: string): ParsedLine[] {
         if (!row?.productId || !row.name || !row.qty || !row.unitPrice) continue;
 
         const unitPrice = Number(row.unitPrice);
+        const perKg = Boolean(row.perKg) && unitPrice !== 0 && row.lineTotal;
         purchases.push({
             raw_name: row.name,
-            qty: Number(row.qty),
+            qty: perKg
+                ? Math.round((Number(row.lineTotal) / unitPrice) * 100) / 100
+                : Number(row.qty),
+            unit: perKg ? "kg" : "pcs",
             unit_price: unitPrice,
             store,
             bought_on,
             product_id: row.productId,
-            weight:
-                row.perKg && unitPrice !== 0 && row.lineTotal
-                    ? Number(row.lineTotal) / unitPrice
-                    : null,
         });
     }
     return purchases;

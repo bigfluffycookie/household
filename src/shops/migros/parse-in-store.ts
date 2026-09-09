@@ -7,7 +7,7 @@ import type { ParsedLine } from "../../purchases/types";
 const store = "migros";
 
 const purchaseRow =
-    /^(?<name>.*)\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\d+\.\d{2})?\s+\d+\.\d{2}\s+\d+$/;
+    /^(?<name>.*)\s+(?<qty>\d+(?:\.\d+)?)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\d+\.\d{2})?\s+\d+\.\d{2}\s+\d+$/;
 
 function match(receipt: string): boolean {
     return receipt.includes("Artikelbezeichnung");
@@ -36,11 +36,11 @@ function parse(receipt: string): ParsedLine[] {
         purchases.push({
             raw_name: row.name,
             qty: Number(row.qty),
+            unit: row.qty.includes(".") ? "kg" : "pcs",
             unit_price: Number(row.unitPrice),
             store,
             bought_on,
             product_id: null,
-            weight: null,
         });
     }
     return purchases;

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsx --env-file=.env src/server.ts",
+    "start": "docker compose up -d --wait && tsx --env-file=.env src/server.ts",
+    "from-pdf": "docker compose up -d --wait && node --import tsx --env-file=.env src/purchases/from-pdf.ts",
     "backup": "powershell -File scripts/backup.ps1",
     "test": "tsx --test test/**/*.test.ts"
   },

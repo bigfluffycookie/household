@@ -29,6 +29,21 @@ describe("pdf fixtures", () => {
         ]);
     });
 
+    it("parses in-store catch-weight as kg", () => {
+        const text = [
+            "Artikelbezeichnung Menge Preis Gespart Total #",
+            "Zucchetti 0.157 3.50 0.55 1",
+            "YOU Skyr Mokka 2 1.80 3.60 1",
+            "Zwischentotal 4.15",
+            "05.09.2026",
+        ].join("\n");
+        const shop = detectShop(text);
+        assert.deepEqual(shop.parseDocument(text), [
+            inStoreLine("Zucchetti", 0.157, 3.5, "kg"),
+            inStoreLine("YOU Skyr Mokka", 2, 1.8),
+        ]);
+    });
+
     it("parses an online invoice", async () => {
         const text = await textOf("migros-online.pdf");
         const shop = detectShop(text);
@@ -40,7 +55,7 @@ describe("pdf fixtures", () => {
             onlineLine("Migros - Schalotten", 1, 1.95, "4212543"),
             onlineLine("Migros Bio - Eier - 63+ Freilandhaltung", 2, 3.5, "6581918"),
             onlineLine("ZEBA - Gebührensäcke - 35l, Zug", 1, 25, "5293394"),
-            onlineLine("Chinakohl", 1, 4.9, "61641", 2.7 / 4.9),
+            onlineLine("Chinakohl", 0.55, 4.9, "61641", "kg"),
             onlineLine("Coca-Cola - Zero - ohne Zuckerzusatz", 1, 14.35, "69306"),
             onlineLine("Migros - Gurken", 1, 1.5, "73424"),
             onlineLine("Kinder - Country", 1, 3.8, "81280"),
@@ -54,7 +69,7 @@ describe("pdf fixtures", () => {
             onlineLine("PET-Sammelsack", 1, 0, "3545100"),
             onlineLine("Floralp - Vorzugsbutter", 1, 3.5, "10847"),
             onlineLine("Galbani - Ricotta", 1, 3.65, "11515"),
-            onlineLine("Migros Bio - Poulet- Minifilet", 1, 58.4, "222131", 11.1 / 58.4),
+            onlineLine("Migros Bio - Poulet- Minifilet", 0.19, 58.4, "222131", "kg"),
             onlineLine("You - Skyr - Stracciatella", 4, 1.8, "16139727"),
             onlineLine("Story Mania Sticker", 5, 0, "17346910"),
         ]);
@@ -70,15 +85,16 @@ function inStoreLine(
     raw_name: string,
     qty: number,
     unit_price: number,
+    unit: ParsedLine["unit"] = "pcs",
 ): ParsedLine {
     return {
         raw_name,
         qty,
+        unit,
         unit_price,
         store: "migros",
         bought_on: "2026-09-05",
         product_id: null,
-        weight: null,
     };
 }
 
@@ -87,15 +103,15 @@ function onlineLine(
     qty: number,
     unit_price: number,
     product_id: string,
-    weight: number | null = null,
+    unit: ParsedLine["unit"] = "pcs",
 ): ParsedLine {
     return {
         raw_name,
         qty,
+        unit,
         unit_price,
         store: "migros",
         bought_on: "2026-09-09",
         product_id,
-        weight,
     };
 }

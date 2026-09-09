@@ -8,7 +8,7 @@ export const shops: Shop[] = [migros];
 export function detectShop(text: string): Shop {
     const shop = shops.find((s) => s.match(text));
     if (!shop) {
-        throw new Error("no shop for this document");
+        throw new Error("unknown shop for this document");
     }
     return shop;
 }
