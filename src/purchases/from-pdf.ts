@@ -1,21 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PDFParse } from "pdf-parse";
 import { pool } from "../db";
-import { shopFor } from "../shops";
+import { detectShop } from "../shops";
+import { pdfToText } from "./pdf-to-text";
 import { save } from "./write";
 
-export async function pdfToText(bytes: Buffer): Promise<string> {
-    const pdf = new PDFParse({ data: bytes });
-    const { text } = await pdf.getText();
-    await pdf.destroy();
-    return text;
-}
-
-export async function fromPdf(bytes: Buffer) {
+async function fromPdf(bytes: Buffer) {
     const text = await pdfToText(bytes);
-    const shop = shopFor(text);
+    const shop = detectShop(text);
     return save(shop, shop.parseDocument(text));
 }
 

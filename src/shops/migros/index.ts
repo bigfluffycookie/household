@@ -1,6 +1,4 @@
-import type { ParsedLine } from "../../purchases/types";
 import type { Shop } from "../types";
-import { byId } from "./lookup";
 import { migrosStore } from "./parse-in-store";
 import { migrosOnline } from "./parse-online";
 
@@ -19,17 +17,7 @@ export const migros: Shop = {
         return parser.parse(text);
     },
     async enrich(lines) {
-        const out: ParsedLine[] = [];
-        for (const line of lines) {
-            if (!line.product_id) {
-                out.push(line);
-                continue;
-            }
-            const extra = await byId(line.product_id);
-            out.push(
-                extra ? { ...line, product_id: extra.migrosId } : line,
-            );
-        }
-        return out;
+        // TODO
+        return []
     },
 };

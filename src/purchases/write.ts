@@ -7,7 +7,7 @@ function toIsoDate(boughtOn: string): string {
     return boughtOn.split(".").reverse().join("-");
 }
 
-export async function writePurchases(lines: ParsedLine[]) {
+async function writePurchases(lines: ParsedLine[]) {
     const written = [];
     for (const line of lines) {
         const { rows } = await pool.query(
