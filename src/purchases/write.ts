@@ -3,7 +3,7 @@ import type { Shop } from "../shops/types";
 import type { ParsedLine } from "./types";
 
 const purchaseColumns =
-    "id, bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id, line_no";
+    "id, bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id";
 
 export type SaveResult = {
     duplicate: boolean;
@@ -12,7 +12,7 @@ export type SaveResult = {
 
 async function purchasesForReceipt(receiptId: number) {
     const { rows } = await pool.query(
-        `select ${purchaseColumns} from purchases where receipt_id = $1 order by line_no`,
+        `select ${purchaseColumns} from purchases where receipt_id = $1 order by id`,
         [receiptId],
     );
     return rows;
@@ -51,10 +51,10 @@ export async function save(
         }
 
         const written = [];
-        for (const [i, line] of linesToWrite.entries()) {
+        for (const line of linesToWrite) {
             const { rows } = await client.query(
-                `insert into purchases (bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id, line_no)
-                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                `insert into purchases (bought_on, store, raw_name, qty, unit, unit_price, product_id, receipt_id)
+                 values ($1, $2, $3, $4, $5, $6, $7, $8)
                  returning ${purchaseColumns}`,
                 [
                     line.bought_on,
@@ -65,7 +65,6 @@ export async function save(
                     line.unit_price,
                     line.product_id,
                     receiptId,
-                    i + 1,
                 ],
             );
             const row = rows[0];

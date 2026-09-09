@@ -20,24 +20,14 @@ create table purchases (
   unit_price numeric,
   product_id text,
   receipt_id integer references receipts(id),
-  line_no integer,
-  constraint purchases_unit_check check (unit in ('pcs', 'kg')),
-  constraint purchases_receipt_line unique (receipt_id, line_no)
+  constraint purchases_unit_check check (unit in ('pcs', 'kg'))
 );
 
 comment on table purchases is
   'Append-only receipt lines.';
-comment on column purchases.store is
-  'Shop the receipt came from.';
 comment on column purchases.raw_name is
   'Item name as printed on the receipt.';
 comment on column purchases.qty is
-  'How much of unit was bought. Pack count for pcs, kilograms for kg.';
-comment on column purchases.unit is
-  'pcs for packed items, kg for items sold by weight.';
+  'Pack count for pcs, kilograms for kg.';
 comment on column purchases.product_id is
   'Store product id from the receipt, when present.';
-comment on column purchases.receipt_id is
-  'Receipt this line was imported from.';
-comment on column purchases.line_no is
-  '1-based line index on that receipt.';
