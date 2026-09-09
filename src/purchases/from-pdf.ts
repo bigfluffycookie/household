@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pool } from "../db";
 import { detectShop } from "../shops";
-import { pdfToText } from "./pdf-to-text";
+import { pdfToText } from "../utils.ts/pdf-to-text";
 import { save } from "./write";
 
 async function fromPdf(bytes: Buffer) {

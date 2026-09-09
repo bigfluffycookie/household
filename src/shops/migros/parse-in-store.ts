@@ -14,7 +14,10 @@ function match(receipt: string): boolean {
 }
 
 function parse(receipt: string): ParsedLine[] {
-    const bought_on = receipt.match(/(\d{2}\.\d{2}\.\d{4})/)?.[1] ?? "";
+    const bought_on = (receipt.match(/(\d{2}\.\d{2}\.\d{4})/)?.[1] ?? "")
+        .split(".")
+        .reverse()
+        .join("-");
 
     const lines = receipt.split(/\r?\n/).map((line) => line.trim());
     const header = lines.findIndex((line) =>

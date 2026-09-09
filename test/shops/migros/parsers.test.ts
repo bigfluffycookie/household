@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { pdfToText } from "../../../src/purchases/pdf-to-text.js";
+import { pdfToText } from "../../../src/utils.ts/pdf-to-text.js";
 import { detectShop } from "../../../src/shops/index.js";
 import type { ParsedLine } from "../../../src/purchases/types.js";
 
@@ -76,7 +76,7 @@ function inStoreLine(
         qty,
         unit_price,
         store: "migros",
-        bought_on: "05.09.2026",
+        bought_on: "2026-09-05",
         product_id: null,
         weight: null,
     };
