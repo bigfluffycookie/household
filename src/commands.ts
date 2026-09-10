@@ -12,10 +12,8 @@ export const commands: Command[] = [
         usage: "import <file.pdf>",
         async run([file]) {
             if (!file) throw new Error("usage: household import <file.pdf>");
-            const { duplicate, purchases } = await fromPdf(file);
-            return duplicate
-                ? `already imported, ${purchases.length} purchases`
-                : `wrote ${purchases.length} purchases`;
+            const items = await fromPdf(file);
+            return `wrote ${items.length} items`;
         },
     },
-];
+]

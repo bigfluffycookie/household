@@ -1,23 +1,20 @@
 export type PurchaseUnit = "pcs" | "kg";
 
-export type ParsedLine = {
-    raw_name: string;
-    qty: number;
-    unit: PurchaseUnit;
-    unit_price: number | null;
+export type Purchase = {
     store: string;
+    external_id: string;
     bought_on: string;
-    product_id: string | null;
+    items: Item[];
 };
 
-export type PurchaseRow = {
-    id: number;
-    bought_on: string;
-    store: string;
-    raw_name: string;
+export type Item = {
+    name: string;
     qty: number;
     unit: PurchaseUnit;
-    unit_price: number | null;
-    product_id: string | null;
+    price: number | null;
+};
+
+export type ItemRow = Item & {
+    id: number;
     receipt_id: number;
 };

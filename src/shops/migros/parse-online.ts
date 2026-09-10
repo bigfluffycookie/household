@@ -2,12 +2,12 @@
  * parses invoices from migros online delivery service.
  * Subject to change if migros changes the layout.
  */
-import type { ParsedLine } from "../../purchases/types";
+import type { Purchase, Item } from "../../purchases/types";
 
 const store = "migros";
 
 const purchaseRow =
-    /^(?<productId>\d{3,})\s+(?<name>.+?)\s+\d+\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\*\d+\.\d{2})?(?<perKg>\s+\/(?:\s+kg)?)?\s+(?<lineTotal>\d+\.\d{2})\s+\d+\.\d%$/;
+    /^(?<productId>\d{3,})\s+(?<name>.+?)\s+\d+\s+(?<qty>\d+)\s+(?<unitPrice>\d+\.\d{2})(?:\s+\*\d+\.\d{2})?(?<perKg>\s+\/(?:\s+kg)?)?\s+(?<price>\d+\.\d{2})\s+\d+\.\d%$/;
 
 function match(receipt: string): boolean {
     return receipt.includes("Migros Online AG");
@@ -23,6 +23,15 @@ function deliveryDate(receipt: string): string {
     const i = labels.indexOf("Lieferdatum");
     const raw = (i === -1 ? dates.at(-1) : dates[i]) ?? "";
     return raw.split("/").reverse().join("-");
+}
+
+function getExternalId(receipt: string) {
+    const header = receipt.split("Ihre Lieferung im Detail")[0] ?? receipt;
+    // pdf-parse prints the order id, then the three dates, then the labels.
+    const id = header.match(/(\S*\d\S*)\s+(?:\d{2}\/\d{2}\/\d{4}\s+){3}/)?.[1];
+    if (id) return id;
+    console.warn("External Id could not be parsed from migros online invoice.");
+    return null;
 }
 
 /** pdf-parse puts /kg and discount leftovers on the next lines. */
@@ -44,13 +53,12 @@ function joinWrappedRows(lines: string[]): string[] {
     return rows;
 }
 
-function parse(receipt: string): ParsedLine[] {
-    const bought_on = deliveryDate(receipt);
+function getItems(receipt: string): Item[] {
     const lines = joinWrappedRows(
         receipt.split(/\r?\n/).map((line) => line.trim()),
     );
 
-    const purchases: ParsedLine[] = [];
+    const items: Item[] = [];
     for (const line of lines) {
         if (
             line.startsWith("Lieferkosten") ||
@@ -61,23 +69,31 @@ function parse(receipt: string): ParsedLine[] {
         }
 
         const row = line.match(purchaseRow)?.groups;
-        if (!row?.productId || !row.name || !row.qty || !row.unitPrice) continue;
+        if (!row?.productId || !row.name || !row.qty || !row.price) continue;
 
         const unitPrice = Number(row.unitPrice);
-        const perKg = Boolean(row.perKg) && unitPrice !== 0 && row.lineTotal;
-        purchases.push({
-            raw_name: row.name,
+        const price = Number(row.price);
+        const perKg = Boolean(row.perKg) && unitPrice !== 0;
+        items.push({
+            name: row.name,
             qty: perKg
-                ? Math.round((Number(row.lineTotal) / unitPrice) * 100) / 100
+                ? Math.round((price / unitPrice) * 100) / 100
                 : Number(row.qty),
             unit: perKg ? "kg" : "pcs",
-            unit_price: unitPrice,
-            store,
-            bought_on,
-            product_id: row.productId,
+            price,
         });
     }
-    return purchases;
+    return items;
+}
+
+export function parse(receipt: string): Purchase | null {
+    const external_id = getExternalId(receipt);
+    if (!external_id) return null;
+
+    const items = getItems(receipt);
+    if (!items.length) return null;
+
+    return { store, external_id, bought_on: deliveryDate(receipt), items };
 }
 
 export const migrosOnline = {
